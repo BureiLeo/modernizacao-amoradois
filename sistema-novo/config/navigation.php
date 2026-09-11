@@ -28,6 +28,7 @@ return [
 
     // Itens secundarios (rodape da sidebar / fim do drawer "Mais").
     'secondary' => [
+        ['key' => 'categorias', 'label' => 'Categorias', 'icon' => 'gift', 'route' => 'categorias.index'],
         ['key' => 'usuarios', 'label' => 'Usuários', 'icon' => 'user', 'route' => 'usuarios.index'],
         ['key' => 'configuracoes', 'label' => 'Configurações', 'icon' => 'settings', 'route' => 'profile'],
     ],

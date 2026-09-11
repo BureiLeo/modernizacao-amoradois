@@ -7,7 +7,13 @@
 ])
 
 @php
-    $errorMessage = $error ?? ($errors->has($name) ? $errors->first($name) : null);
+    // Se houver wire:model (ex.: "form.preco_venda"), o Livewire aninha
+    // o erro sob essa mesma chave - nao apenas o "name" puro. Sem isso,
+    // erros de formularios que usam Livewire\Form (ClienteForm,
+    // ProdutoForm, CategoriaForm) ficavam silenciosamente invisiveis
+    // (bug real encontrado e corrigido na Etapa 6/7).
+    $errorKey = $attributes->wire('model')->value() ?: $name;
+    $errorMessage = $error ?? ($errors->has($errorKey) ? $errors->first($errorKey) : null);
 @endphp
 
 <div>

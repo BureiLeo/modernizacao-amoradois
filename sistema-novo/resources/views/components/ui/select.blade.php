@@ -8,7 +8,8 @@
 ])
 
 @php
-    $errorMessage = $error ?? ($errors->has($name) ? $errors->first($name) : null);
+    $errorKey = $attributes->wire('model')->value() ?: $name;
+    $errorMessage = $error ?? ($errors->has($errorKey) ? $errors->first($errorKey) : null);
 @endphp
 
 <div>
@@ -26,7 +27,12 @@
         ]) }}
     >
         @if ($placeholder)
-            <option value="" disabled selected>{{ $placeholder }}</option>
+            {{-- Sem "disabled": alguns navegadores nao conseguem selecionar
+                 programaticamente (via wire:model) uma option desabilitada,
+                 fazendo o select "cair" na primeira option habilitada mesmo
+                 com o valor real do form continuando null/vazio (bug real
+                 encontrado e corrigido nesta etapa). --}}
+            <option value="">{{ $placeholder }}</option>
         @endif
 
         {{ $slot }}

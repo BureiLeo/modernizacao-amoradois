@@ -7,7 +7,8 @@
 ])
 
 @php
-    $errorMessage = $error ?? ($errors->has($name) ? $errors->first($name) : null);
+    $errorKey = $attributes->wire('model')->value() ?: $name;
+    $errorMessage = $error ?? ($errors->has($errorKey) ? $errors->first($errorKey) : null);
 @endphp
 
 <div>

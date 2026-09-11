@@ -1,7 +1,14 @@
+import mask from '@alpinejs/mask';
+
 // ApexCharts carregado sob demanda (dynamic import) para nao pesar o
 // bundle inicial em paginas que nao tem grafico (mobile-first: evita
 // ~266KB gzip desnecessarios na maioria das telas).
 document.addEventListener('alpine:init', () => {
+    // Plugin oficial (~1KB) para mascara visual de telefone/CPF/CNPJ
+    // (Etapa 6/7 #12/#14) - registrado antes do Alpine.start() interno
+    // do Livewire, que dispara logo apos este evento.
+    window.Alpine.plugin(mask);
+
     window.Alpine.data('salesChart', (initial) => ({
         chart: null,
 
