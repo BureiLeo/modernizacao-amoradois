@@ -65,6 +65,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Canal dedicado da migracao de dados do legado (Etapa 4).
+        // Nunca registrar senhas/hashes/dados pessoais completos aqui.
+        'legacy_migration' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/legacy-migration.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
