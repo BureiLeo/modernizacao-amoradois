@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Actions\Logout;
+use App\Support\Navigation;
 use Livewire\Volt\Component;
 
 new class extends Component
@@ -16,95 +17,237 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" wire:navigate>
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                    </a>
-                </div>
+@php
+    $navPrimary = Navigation::primary();
+    $navSecondary = Navigation::secondary();
+    $navBottom = Navigation::bottom();
+    $primaryAction = Navigation::primaryAction();
+    $user = auth()->user();
+@endphp
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                </div>
+<div x-data="{ moreOpen: false, userMenuOpen: false }">
+
+    {{-- ==================================================================
+         SIDEBAR — somente desktop (>= lg, 1024px)
+         ================================================================== --}}
+    <aside class="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:w-64 lg:z-30 bg-gradient-to-b from-brand-vinho to-brand-ameixa">
+        <div class="flex items-center gap-3 px-5 h-20 shrink-0">
+            <img src="{{ asset('images/brand/icon-master.png') }}" alt="" class="w-9 h-9 object-contain" aria-hidden="true">
+            <div class="min-w-0">
+                <p class="text-brand-branco font-bold leading-tight truncate">Amor a Dois</p>
+                <p class="text-brand-rosa-nude/80 text-[11px] leading-tight truncate">Personalizados</p>
             </div>
+        </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
+        <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+            @foreach ($navPrimary as $item)
+                <a
+                    href="{{ $item['href'] ?? '#' }}"
+                    @if(! $item['enabled']) aria-disabled="true" tabindex="-1" @else wire:navigate @endif
+                    @class([
+                        'flex items-center gap-3 px-3 py-2.5 rounded-brand-sm text-sm font-medium transition-colors',
+                        'bg-brand-branco/15 text-brand-branco' => $item['active'],
+                        'text-brand-rosa-nude/90 hover:bg-brand-branco/10 hover:text-brand-branco' => ! $item['active'] && $item['enabled'],
+                        'text-brand-rosa-nude/40 pointer-events-none' => ! $item['enabled'],
+                    ])
+                >
+                    <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
+                    <span class="truncate">{{ $item['label'] }}</span>
+                    @if (! $item['enabled'])
+                        <span class="ms-auto text-[10px] uppercase tracking-wide bg-brand-branco/10 px-1.5 py-0.5 rounded">Em breve</span>
+                    @endif
+                </a>
+            @endforeach
+        </nav>
 
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
+        <div class="px-3 py-2 border-t border-brand-branco/10 space-y-1">
+            @foreach ($navSecondary as $item)
+                <a
+                    href="{{ $item['href'] ?? '#' }}"
+                    @if(! $item['enabled']) aria-disabled="true" tabindex="-1" @else wire:navigate @endif
+                    @class([
+                        'flex items-center gap-3 px-3 py-2.5 rounded-brand-sm text-sm font-medium transition-colors',
+                        'bg-brand-branco/15 text-brand-branco' => $item['active'],
+                        'text-brand-rosa-nude/90 hover:bg-brand-branco/10 hover:text-brand-branco' => ! $item['active'] && $item['enabled'],
+                        'text-brand-rosa-nude/40 pointer-events-none' => ! $item['enabled'],
+                    ])
+                >
+                    <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
+                    <span class="truncate">{{ $item['label'] }}</span>
+                    @if (! $item['enabled'])
+                        <span class="ms-auto text-[10px] uppercase tracking-wide bg-brand-branco/10 px-1.5 py-0.5 rounded">Em breve</span>
+                    @endif
+                </a>
+            @endforeach
+        </div>
 
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile')" wire:navigate>
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link>
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </button>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+        {{-- Usuario atual + sair --}}
+        <div class="px-3 py-3 border-t border-brand-branco/10">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-9 h-9 rounded-full bg-brand-branco/15 text-brand-branco flex items-center justify-center font-semibold text-sm shrink-0">
+                    {{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-brand-branco text-sm font-medium truncate">{{ $user->name }}</p>
+                    <p class="text-brand-rosa-nude/70 text-xs truncate">{{ $user->role->label() }}</p>
+                </div>
+                <button wire:click="logout" aria-label="Sair" class="shrink-0 text-brand-rosa-nude/80 hover:text-brand-branco">
+                    <x-icon name="log-out" class="w-4 h-4" />
                 </button>
             </div>
         </div>
-    </div>
+    </aside>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
+    {{-- ==================================================================
+         HEADER DESKTOP — somente >= lg
+         ================================================================== --}}
+    <header class="hidden lg:flex lg:fixed lg:top-0 lg:left-64 lg:right-0 lg:h-20 lg:z-20 items-center gap-4 px-6 bg-brand-surface border-b border-brand-border/30">
+        <div class="flex-1 max-w-md">
+            <x-ui.search-input placeholder="Buscar produtos, clientes ou pedidos..." disabled class="opacity-60" />
         </div>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
-                <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
-            </div>
+        <div class="flex items-center gap-2 ms-auto">
+            <x-ui.icon-button icon="bell" label="Notificações" />
 
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile')" wire:navigate>
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <button wire:click="logout" class="w-full text-start">
-                    <x-responsive-nav-link>
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
+            <div class="relative" x-on:click.outside="userMenuOpen = false">
+                <button type="button" @click="userMenuOpen = ! userMenuOpen" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-brand-sm hover:bg-brand-soft/30">
+                    <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-semibold text-sm">
+                        {{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}
+                    </div>
+                    <span class="text-sm text-brand-text font-medium">{{ Str::of($user->name)->before(' ') }}</span>
+                    <x-icon name="chevron-down" class="w-4 h-4 text-brand-text-muted" />
                 </button>
+
+                <div
+                    x-show="userMenuOpen" x-cloak
+                    x-transition
+                    class="absolute right-0 mt-2 w-48 bg-brand-surface border border-brand-border/40 rounded-brand-sm shadow-brand-md py-1 z-30"
+                >
+                    <p class="px-3 py-2 text-xs text-brand-text-muted border-b border-brand-border/30">{{ $user->role->label() }}</p>
+                    <a href="{{ route('profile') }}" wire:navigate class="block px-3 py-2 text-sm text-brand-text hover:bg-brand-soft/30">Meu perfil</a>
+                    <button wire:click="logout" class="w-full text-left px-3 py-2 text-sm text-brand-danger hover:bg-brand-danger-soft">Sair</button>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
+    </header>
+
+    {{-- ==================================================================
+         HEADER MOBILE — somente < lg
+         ================================================================== --}}
+    <header class="lg:hidden sticky top-0 z-20 flex items-center justify-between gap-3 px-4 h-16 bg-brand-surface border-b border-brand-border/30">
+        <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2 min-w-0">
+            <img src="{{ asset('images/brand/icon-master.png') }}" alt="" aria-hidden="true" class="w-8 h-8 object-contain">
+            <span class="font-bold text-brand-text truncate">Amor a Dois</span>
+        </a>
+
+        <div class="flex items-center gap-1 shrink-0">
+            <x-ui.icon-button icon="bell" label="Notificações" />
+            <div class="w-9 h-9 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-semibold text-sm">
+                {{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}
+            </div>
+        </div>
+    </header>
+
+    {{-- ==================================================================
+         BOTTOM NAVIGATION — somente < lg
+         ================================================================== --}}
+    <nav
+        class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-brand-surface border-t border-brand-border/30"
+        style="padding-bottom: env(safe-area-inset-bottom);"
+        aria-label="Navegação principal"
+    >
+        <div class="grid grid-cols-5 items-center h-16">
+            @foreach ($navBottom as $i => $item)
+                @if ($i === 2)
+                    {{-- Slot central do botao "+" --}}
+                    <div class="flex items-center justify-center">
+                        <a
+                            href="{{ $primaryAction['href'] ?? '#' }}"
+                            @if(! $primaryAction['enabled']) aria-disabled="true" tabindex="-1" @else wire:navigate @endif
+                            aria-label="{{ $primaryAction['label'] }}"
+                            @class([
+                                '-mt-6 w-14 h-14 rounded-full flex items-center justify-center shadow-brand-md text-brand-branco',
+                                'bg-brand-primary' => $primaryAction['enabled'],
+                                'bg-brand-border pointer-events-none' => ! $primaryAction['enabled'],
+                            ])
+                        >
+                            <x-icon name="plus" class="w-6 h-6" />
+                        </a>
+                    </div>
+                @endif
+
+                <a
+                    href="{{ $item['href'] ?? '#' }}"
+                    @if(! $item['enabled']) aria-disabled="true" tabindex="-1" @else wire:navigate @endif
+                    @class([
+                        'flex flex-col items-center justify-center gap-0.5 h-full text-[11px] font-medium',
+                        'text-brand-primary' => $item['active'],
+                        'text-brand-text-muted' => ! $item['active'] && $item['enabled'],
+                        'text-brand-text-muted/40 pointer-events-none' => ! $item['enabled'],
+                    ])
+                >
+                    <x-icon :name="$item['icon']" class="w-5 h-5" />
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
+
+            <button
+                type="button"
+                @click="moreOpen = true"
+                class="flex flex-col items-center justify-center gap-0.5 h-full text-[11px] font-medium text-brand-text-muted"
+            >
+                <x-icon name="more-horizontal" class="w-5 h-5" />
+                Mais
+            </button>
+        </div>
+    </nav>
+
+    {{-- Drawer "Mais" (mobile) --}}
+    <x-ui.drawer x-model-open="moreOpen" title="Mais opções">
+        <div class="space-y-1 pb-2">
+            @foreach ($navPrimary as $item)
+                @continue(in_array($item['key'], array_column($navBottom, 'key'), true))
+                <a
+                    href="{{ $item['href'] ?? '#' }}"
+                    @if(! $item['enabled']) aria-disabled="true" tabindex="-1" @else wire:navigate @click="moreOpen = false" @endif
+                    @class([
+                        'flex items-center gap-3 px-3 py-3 rounded-brand-sm text-sm font-medium',
+                        'text-brand-text hover:bg-brand-soft/30' => $item['enabled'],
+                        'text-brand-text-muted/50 pointer-events-none' => ! $item['enabled'],
+                    ])
+                >
+                    <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
+                    <span class="flex-1">{{ $item['label'] }}</span>
+                    @if (! $item['enabled'])
+                        <span class="text-[10px] uppercase tracking-wide bg-brand-soft/60 text-brand-text-muted px-1.5 py-0.5 rounded">Em breve</span>
+                    @endif
+                </a>
+            @endforeach
+
+            <div class="border-t border-brand-border/30 my-2"></div>
+
+            @foreach ($navSecondary as $item)
+                <a
+                    href="{{ $item['href'] ?? '#' }}"
+                    @if(! $item['enabled']) aria-disabled="true" tabindex="-1" @else wire:navigate @click="moreOpen = false" @endif
+                    @class([
+                        'flex items-center gap-3 px-3 py-3 rounded-brand-sm text-sm font-medium',
+                        'text-brand-text hover:bg-brand-soft/30' => $item['enabled'],
+                        'text-brand-text-muted/50 pointer-events-none' => ! $item['enabled'],
+                    ])
+                >
+                    <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
+                    <span class="flex-1">{{ $item['label'] }}</span>
+                    @if (! $item['enabled'])
+                        <span class="text-[10px] uppercase tracking-wide bg-brand-soft/60 text-brand-text-muted px-1.5 py-0.5 rounded">Em breve</span>
+                    @endif
+                </a>
+            @endforeach
+
+            <button wire:click="logout" class="w-full flex items-center gap-3 px-3 py-3 rounded-brand-sm text-sm font-medium text-brand-danger hover:bg-brand-danger-soft">
+                <x-icon name="log-out" class="w-5 h-5 shrink-0" />
+                Sair
+            </button>
+        </div>
+    </x-ui.drawer>
+</div>
