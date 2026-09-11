@@ -10,13 +10,16 @@ class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_screen_can_be_rendered(): void
+    /**
+     * A rota publica /register foi desabilitada nesta etapa (Etapa 5
+     * #42): sistema interno, sem necessidade de auto-cadastro publico.
+     * Ver routes/auth.php para a analise completa e como reativar.
+     */
+    public function test_registration_screen_is_not_publicly_accessible(): void
     {
         $response = $this->get('/register');
 
-        $response
-            ->assertOk()
-            ->assertSeeVolt('pages.auth.register');
+        $response->assertNotFound();
     }
 
     public function test_new_users_can_register(): void

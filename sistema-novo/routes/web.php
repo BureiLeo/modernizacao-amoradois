@@ -1,10 +1,11 @@
 <?php
 
+use App\Livewire\Dashboard\Index as DashboardIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', DashboardIndex::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
