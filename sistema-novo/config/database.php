@@ -84,6 +84,28 @@ return [
             ]) : [],
         ],
 
+        // Conexao com o banco do SISTEMA LEGADO (PHP antigo), para uso
+        // SOMENTE PARA LEITURA durante a auditoria/migracao (Etapa 2+).
+        // NUNCA usar como conexao padrao do app (DB_CONNECTION continua
+        // sqlite), nunca rodar migrations aqui e nunca escrever nela a
+        // partir do sistema novo. Preencher LEGACY_DB_* apenas no .env
+        // local (nao versionado) - ver .env.example para os nomes.
+        'legacy' => [
+            'driver' => 'mariadb',
+            'host' => env('LEGACY_DB_HOST', '127.0.0.1'),
+            'port' => env('LEGACY_DB_PORT', '3306'),
+            'database' => env('LEGACY_DB_DATABASE', ''),
+            'username' => env('LEGACY_DB_USERNAME', ''),
+            'password' => env('LEGACY_DB_PASSWORD', ''),
+            'unix_socket' => env('LEGACY_DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
