@@ -212,6 +212,22 @@ class VendaCarrinhoTest extends TestCase
         $this->assertEquals(1.0, (float) $material->fresh()->estoque);
     }
 
+    public function test_produto_sem_estoque_aparece_cinza_e_nao_entra_no_carrinho(): void
+    {
+        $user = User::factory()->create();
+        $material = Material::factory()->create(['estoque' => 0]);
+        $produtoSemEstoque = $this->produtoComBom('Caneca lilás', 35, $material);
+        $produtoComEstoque = $this->produtoComBom('Caneca azul', 35);
+
+        $test = Livewire::actingAs($user)->test(VendaCreate::class)
+            ->assertSee('Sem estoque')
+            ->call('adicionar', $produtoSemEstoque->id)
+            ->call('adicionar', $produtoComEstoque->id)
+            ->assertSet('carrinho.p:'.$produtoComEstoque->id.'.quantidade', 1);
+
+        $this->assertArrayNotHasKey('p:'.$produtoSemEstoque->id, $test->get('carrinho'));
+    }
+
     // ==================== EDIÇÃO ====================
 
     public function test_edicao_carrega_todos_os_itens_da_venda(): void

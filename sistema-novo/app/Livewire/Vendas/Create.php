@@ -70,9 +70,18 @@ class Create extends Component
             return;
         }
 
-        $produto = Produto::query()->find($produtoId);
+        $produto = Produto::query()->with('bom.material:id,estoque')->find($produtoId);
 
         if (! $produto) {
+            return;
+        }
+
+        // Produto sem nenhuma unidade produzível com o estoque atual de
+        // materiais (ver Produto::quantidadeDisponivel()) nao entra no
+        // carrinho - a UI ja mostra ele "sem estoque" (cinza/desabilitado).
+        // Faltas parciais (ex: pediu 3, so da pra fazer 1) continuam sendo
+        // bloqueadas apenas no momento de salvar, com mensagem de erro.
+        if ($produto->quantidadeDisponivel() === 0) {
             return;
         }
 
@@ -353,9 +362,12 @@ class Create extends Component
                 $termo = '%'.$this->buscaProduto.'%';
                 $query->where(fn ($q) => $q->where('nome', 'like', $termo)->orWhere('sku', 'like', $termo));
             })
+            ->with('bom.material:id,estoque')
             ->orderBy('nome')
             ->limit(48)
             ->get(['id', 'nome', 'sku', 'preco_venda', 'imagem']);
+
+        $produtos->each(fn (Produto $produto) => $produto->setAttribute('disponivel', $produto->quantidadeDisponivel()));
 
         $clienteSelecionado = $this->cliente_id
             ? Cliente::query()->find($this->cliente_id, ['id', 'nome', 'telefone'])

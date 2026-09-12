@@ -31,19 +31,28 @@
                         @php
                             $chave = 'p:'.$produto->id;
                             $noCarrinho = $carrinho[$chave] ?? null;
+                            $semEstoque = $produto->disponivel !== null && $produto->disponivel <= 0;
                         @endphp
 
                         <div @class([
                             'group relative overflow-hidden rounded-2xl border bg-brand-surface transition',
                             'border-brand-primary ring-2 ring-brand-primary/30' => $noCarrinho,
-                            'border-brand-border/70 hover:border-brand-primary/60 hover:shadow-sm' => ! $noCarrinho,
+                            'border-brand-border/70 hover:border-brand-primary/60 hover:shadow-sm' => ! $noCarrinho && ! $semEstoque,
+                            'border-brand-border/40' => $semEstoque,
                         ])>
                             <button
                                 type="button"
-                                wire:click="adicionar({{ $produto->id }})"
-                                class="block w-full text-left"
+                                @unless ($semEstoque) wire:click="adicionar({{ $produto->id }})" @endunless
+                                @class([
+                                    'block w-full text-left',
+                                    'cursor-not-allowed' => $semEstoque,
+                                ])
+                                @disabled($semEstoque)
                             >
-                                <div class="relative aspect-square w-full overflow-hidden bg-brand-soft/40">
+                                <div @class([
+                                    'relative aspect-square w-full overflow-hidden bg-brand-soft/40',
+                                    'grayscale opacity-50' => $semEstoque,
+                                ])>
                                     @if ($produto->imagem)
                                         <img src="{{ Storage::url($produto->imagem) }}" alt="{{ $produto->nome }}" class="h-full w-full object-cover transition group-hover:scale-105">
                                     @else
@@ -57,9 +66,15 @@
                                             {{ $noCarrinho['quantidade'] }}
                                         </span>
                                     @endif
+
+                                    @if ($semEstoque)
+                                        <span class="absolute inset-x-0 bottom-0 bg-black/70 px-2 py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-white">
+                                            Sem estoque
+                                        </span>
+                                    @endif
                                 </div>
 
-                                <div class="p-2.5">
+                                <div @class(['p-2.5', 'opacity-50' => $semEstoque])>
                                     <div class="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-tight text-brand-text">{{ $produto->nome }}</div>
                                     <div class="mt-1 text-sm font-semibold text-brand-primary">R$ {{ \App\Support\Format::dinheiro($produto->preco_venda) }}</div>
                                 </div>

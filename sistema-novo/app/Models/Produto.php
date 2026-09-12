@@ -58,6 +58,40 @@ class Produto extends Model
         return $this->bom()->exists();
     }
 
+    /**
+     * Quantas unidades deste produto dá para produzir agora, com o estoque
+     * atual de materiais. Retorna null quando o produto não tem receita
+     * cadastrada (nesse caso não há como controlar disponibilidade por
+     * material, então a venda não é bloqueada).
+     */
+    public function quantidadeDisponivel(): ?int
+    {
+        $bom = $this->relationLoaded('bom')
+            ? $this->bom
+            : $this->bom()->with('material:id,estoque')->get();
+
+        if ($bom->isEmpty()) {
+            return null;
+        }
+
+        $minimo = null;
+
+        foreach ($bom as $item) {
+            $qtdNecessaria = (float) $item->quantidade;
+
+            if ($qtdNecessaria <= 0) {
+                continue;
+            }
+
+            $estoqueMaterial = (float) ($item->material->estoque ?? 0);
+            $possivel = (int) floor($estoqueMaterial / $qtdNecessaria);
+
+            $minimo = $minimo === null ? $possivel : min($minimo, $possivel);
+        }
+
+        return $minimo;
+    }
+
     public function vendaItens(): HasMany
     {
         return $this->hasMany(VendaItem::class);
