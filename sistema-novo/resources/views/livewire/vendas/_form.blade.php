@@ -1,4 +1,4 @@
-<div class="pb-40 lg:pb-8">
+<div class="pb-56 lg:pb-8">
     <x-ui.page-header :title="$titulo" :subtitle="$subtitulo">
         <x-slot name="actions">
             <x-ui.button variant="outline" :href="$cancelarUrl" wire:navigate>Cancelar</x-ui.button>
@@ -59,6 +59,12 @@
                                         <div class="flex h-full w-full items-center justify-center text-brand-text-muted/60">
                                             <x-icon name="gift" class="h-10 w-10" />
                                         </div>
+                                    @endif
+
+                                    @if ($semEstoque)
+                                        {{-- Reforço além do grayscale/opacity do container: garante o efeito
+                                             "apagado" mesmo em navegadores/telas onde o filtro CSS passe despercebido. --}}
+                                        <div class="absolute inset-0 bg-white/50"></div>
                                     @endif
 
                                     @if ($noCarrinho)
@@ -165,23 +171,23 @@
                                         <div class="text-[11px] uppercase tracking-wide text-brand-text-muted">Outro custo</div>
                                     @endunless
 
-                                    <div class="mt-2 flex items-center gap-2">
+                                    <div class="mt-2 flex flex-wrap items-center gap-2">
                                         <button type="button" wire:click="diminuir('{{ $chave }}')" aria-label="Diminuir"
-                                            class="flex h-7 w-7 items-center justify-center rounded-full border border-brand-border/70 text-base font-bold leading-none text-brand-text">−</button>
+                                            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand-border/70 text-base font-bold leading-none text-brand-text">−</button>
                                         <input type="number" min="1" wire:model.live.debounce.500ms="carrinho.{{ $chave }}.quantidade" aria-label="Quantidade"
-                                            class="h-7 w-14 rounded-brand-sm border-brand-border/70 bg-brand-surface px-1 text-center text-sm text-brand-text focus:border-brand-primary focus:ring-brand-primary">
+                                            class="h-7 w-14 shrink-0 rounded-brand-sm border-brand-border/70 bg-brand-surface px-1 text-center text-sm text-brand-text focus:border-brand-primary focus:ring-brand-primary">
                                         <button type="button" wire:click="aumentar('{{ $chave }}')" aria-label="Aumentar"
-                                            class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-primary text-base font-bold leading-none text-white">+</button>
+                                            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-base font-bold leading-none text-white">+</button>
 
-                                        <div class="ml-auto flex items-center gap-1 text-xs text-brand-text-muted">
+                                        <div class="flex items-center gap-1 text-xs text-brand-text-muted sm:ml-auto">
                                             <span>R$</span>
                                             <input type="text" inputmode="decimal" wire:model.live.debounce.600ms="carrinho.{{ $chave }}.preco_unitario" aria-label="Preço unitário"
-                                                class="h-7 w-20 rounded-brand-sm border-brand-border/70 bg-brand-surface px-1 text-right text-sm text-brand-text focus:border-brand-primary focus:ring-brand-primary">
+                                                class="h-7 w-20 shrink-0 rounded-brand-sm border-brand-border/70 bg-brand-surface px-1 text-right text-sm text-brand-text focus:border-brand-primary focus:ring-brand-primary">
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="flex flex-col items-end gap-2">
+                                <div class="flex shrink-0 flex-col items-end gap-2">
                                     <div class="whitespace-nowrap text-sm font-semibold text-brand-text">
                                         R$ {{ \App\Support\Format::dinheiro((float) $linha['preco_unitario'] * (int) $linha['quantidade']) }}
                                     </div>
@@ -307,7 +313,9 @@
     </div>
 
     {{-- ============ BARRA FIXA (mobile) ============ --}}
-    <div class="fixed inset-x-0 bottom-0 z-30 border-t border-brand-border/70 bg-brand-surface/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
+    {{-- Posicionada acima da navegação inferior (bottom-16 = altura do menu,
+         h-16) para não ficar coberta por ela (que tem z-index maior). --}}
+    <div class="fixed inset-x-0 bottom-16 z-30 border-t border-brand-border/70 bg-brand-surface/95 p-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
         <div class="mb-2 flex items-end justify-between">
             <div class="text-xs text-brand-text-muted">
                 {{ $this->totalItens() }} {{ $this->totalItens() === 1 ? 'item' : 'itens' }}

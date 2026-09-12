@@ -31,15 +31,21 @@ class StockService
                 $needed = (float) $requirement['quantidade'];
                 $available = (float) ($material->estoque ?? 0);
                 $missing = max($needed - $available, 0.0);
+                $essencial = (bool) ($material->essencial ?? true);
 
                 $requirements[] = [
                     'material' => $material,
                     'quantity' => $needed,
                     'available' => $available,
                     'missing' => $missing,
+                    'essencial' => $essencial,
                 ];
 
-                $missingValue += $missing;
+                // Materiais de apoio/embalagem (nao essenciais) nao bloqueiam
+                // a venda mesmo faltando - so os essenciais (ex.: a caneca).
+                if ($essencial) {
+                    $missingValue += $missing;
+                }
             }
 
             return [
@@ -77,7 +83,11 @@ class StockService
             foreach ($produto->materialRequirements((int) $item->quantidade) as $requirement) {
                 $material = $requirement['material'];
                 $quantity = (float) $requirement['quantidade'];
-                $this->changeMaterialStock($material, -$quantity, StockMovementType::Venda, $produto, $venda, $userId, 'Venda #'.$venda->id);
+                // Materiais de apoio/embalagem (nao essenciais) podem ficar
+                // negativos no estoque - eles nao bloqueiam a venda, so
+                // servem de alerta para reposicao.
+                $allowNegative = ! ($material->essencial ?? true);
+                $this->changeMaterialStock($material, -$quantity, StockMovementType::Venda, $produto, $venda, $userId, 'Venda #'.$venda->id, $allowNegative);
             }
         }
     }
@@ -227,14 +237,14 @@ class StockService
         }
     }
 
-    protected function changeMaterialStock(Material $material, float $quantityDelta, StockMovementType $type, ?Produto $produto = null, ?Venda $venda = null, ?int $userId = null, ?string $sourceLabel = null): StockMovement
+    protected function changeMaterialStock(Material $material, float $quantityDelta, StockMovementType $type, ?Produto $produto = null, ?Venda $venda = null, ?int $userId = null, ?string $sourceLabel = null, bool $allowNegative = false): StockMovement
     {
-        return DB::transaction(function () use ($material, $quantityDelta, $type, $produto, $venda, $userId, $sourceLabel) {
+        return DB::transaction(function () use ($material, $quantityDelta, $type, $produto, $venda, $userId, $sourceLabel, $allowNegative) {
             $locked = Material::query()->whereKey($material->getKey())->lockForUpdate()->firstOrFail();
             $before = (float) ($locked->estoque ?? 0);
             $after = $before + $quantityDelta;
 
-            if ($after < 0) {
+            if ($after < 0 && ! $allowNegative) {
                 throw new InvalidArgumentException('Não foi possível concluir a operação: quantidade indisponível em estoque.');
             }
 

@@ -24,6 +24,8 @@ class Edit extends Component
 
     public string $observacoes = '';
 
+    public bool $essencial = true;
+
     public function mount(Material $material): void
     {
         $this->material = $material;
@@ -33,6 +35,7 @@ class Edit extends Component
         $this->estoque_minimo = (float) ($material->estoque_minimo ?? 0);
         $this->custo_medio = (float) ($material->custo_medio ?? 0);
         $this->observacoes = (string) ($material->observacoes ?? '');
+        $this->essencial = (bool) $material->essencial;
     }
 
     public function salvar(): void
@@ -53,6 +56,7 @@ class Edit extends Component
             'estoque_minimo' => $this->estoque_minimo,
             'custo_medio' => $this->custo_medio,
             'observacoes' => $this->observacoes !== '' ? $this->observacoes : null,
+            'essencial' => $this->essencial,
         ]);
 
         session()->flash('success', 'Material atualizado com sucesso.');

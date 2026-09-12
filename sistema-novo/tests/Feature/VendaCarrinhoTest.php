@@ -228,6 +228,30 @@ class VendaCarrinhoTest extends TestCase
         $this->assertArrayNotHasKey('p:'.$produtoSemEstoque->id, $test->get('carrinho'));
     }
 
+    public function test_material_de_apoio_sem_estoque_nao_bloqueia_venda(): void
+    {
+        $user = User::factory()->create();
+        $caneca = Material::factory()->create(['estoque' => 10, 'essencial' => true]);
+        $embalagem = Material::factory()->create(['estoque' => 0, 'essencial' => false]);
+        $produto = Produto::factory()->create(['nome' => 'Caneca com caixa', 'preco_venda' => 35, 'ativo' => true]);
+
+        ProdutoBom::query()->create(['produto_id' => $produto->id, 'material_id' => $caneca->id, 'quantidade' => 1]);
+        ProdutoBom::query()->create(['produto_id' => $produto->id, 'material_id' => $embalagem->id, 'quantidade' => 1]);
+
+        // Produto continua disponivel para venda: so o material essencial
+        // (a caneca) conta para a disponibilidade exibida na grade.
+        $test = Livewire::actingAs($user)->test(VendaCreate::class)
+            ->assertDontSee('Sem estoque')
+            ->call('adicionar', $produto->id)
+            ->call('revisar')
+            ->call('salvar');
+
+        $this->assertNull($test->get('erro'), (string) $test->get('erro'));
+        $this->assertSame(1, Venda::query()->count());
+        $this->assertEquals(9.0, (float) $caneca->fresh()->estoque);
+        $this->assertEquals(-1.0, (float) $embalagem->fresh()->estoque);
+    }
+
     // ==================== EDIÇÃO ====================
 
     public function test_edicao_carrega_todos_os_itens_da_venda(): void

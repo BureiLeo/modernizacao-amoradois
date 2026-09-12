@@ -231,7 +231,8 @@ class VendaService
 
             $availability = $this->stockService->checkAvailability($produto, $quantidade);
             if (! $availability['available']) {
-                $firstMissing = $availability['requirements'][0] ?? null;
+                $firstMissing = collect($availability['requirements'])
+                    ->first(fn (array $r) => ($r['essencial'] ?? true) && $r['missing'] > 0);
                 $material = $firstMissing['material'] ?? null;
                 $needed = $firstMissing['quantity'] ?? 0;
                 $available = $firstMissing['available'] ?? 0;

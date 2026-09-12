@@ -14,6 +14,10 @@
             <div class="mt-1 text-lg font-semibold text-brand-text">{{ $material->unidade_base }}</div>
             <div class="mt-4 text-sm text-brand-text-muted">Estoque atual</div>
             <div class="mt-1 text-lg font-semibold text-brand-text">{{ \App\Support\Format::quantidade($material->estoque) }} {{ $material->unidade_base }}</div>
+            <div class="mt-4 flex items-center gap-1.5 text-xs font-medium {{ $material->essencial ? 'text-brand-primary' : 'text-brand-text-muted' }}">
+                <x-icon :name="$material->essencial ? 'check-circle' : 'package'" class="h-3.5 w-3.5" />
+                {{ $material->essencial ? 'Essencial — bloqueia venda se faltar' : 'Apoio/embalagem — não bloqueia venda' }}
+            </div>
         </div>
 
         <div class="rounded-2xl border border-brand-border/70 bg-brand-surface p-4">

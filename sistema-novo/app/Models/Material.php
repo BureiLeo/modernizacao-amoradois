@@ -23,6 +23,7 @@ class Material extends Model
             'estoque' => 'decimal:3',
             'estoque_minimo' => 'decimal:3',
             'custo_medio' => 'decimal:6',
+            'essencial' => 'boolean',
         ];
     }
 

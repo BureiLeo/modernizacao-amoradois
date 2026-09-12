@@ -63,12 +63,16 @@ class Produto extends Model
      * atual de materiais. Retorna null quando o produto não tem receita
      * cadastrada (nesse caso não há como controlar disponibilidade por
      * material, então a venda não é bloqueada).
+     *
+     * Considera apenas materiais marcados como "essenciais" (ex.: a caneca
+     * em si) - materiais de apoio/embalagem (papel, fita, caixinha...) não
+     * limitam a disponibilidade, pois a falta deles não impede a venda.
      */
     public function quantidadeDisponivel(): ?int
     {
         $bom = $this->relationLoaded('bom')
             ? $this->bom
-            : $this->bom()->with('material:id,estoque')->get();
+            : $this->bom()->with('material:id,estoque,essencial')->get();
 
         if ($bom->isEmpty()) {
             return null;
@@ -79,7 +83,7 @@ class Produto extends Model
         foreach ($bom as $item) {
             $qtdNecessaria = (float) $item->quantidade;
 
-            if ($qtdNecessaria <= 0) {
+            if ($qtdNecessaria <= 0 || ! ($item->material->essencial ?? true)) {
                 continue;
             }
 

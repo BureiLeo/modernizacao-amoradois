@@ -70,7 +70,7 @@ class Create extends Component
             return;
         }
 
-        $produto = Produto::query()->with('bom.material:id,estoque')->find($produtoId);
+        $produto = Produto::query()->with('bom.material:id,estoque,essencial')->find($produtoId);
 
         if (! $produto) {
             return;
@@ -362,7 +362,7 @@ class Create extends Component
                 $termo = '%'.$this->buscaProduto.'%';
                 $query->where(fn ($q) => $q->where('nome', 'like', $termo)->orWhere('sku', 'like', $termo));
             })
-            ->with('bom.material:id,estoque')
+            ->with('bom.material:id,estoque,essencial')
             ->orderBy('nome')
             ->limit(48)
             ->get(['id', 'nome', 'sku', 'preco_venda', 'imagem']);

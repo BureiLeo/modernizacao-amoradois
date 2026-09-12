@@ -22,6 +22,8 @@ class Create extends Component
 
     public string $observacoes = '';
 
+    public bool $essencial = true;
+
     public function salvar(): void
     {
         $this->validate([
@@ -41,6 +43,7 @@ class Create extends Component
             'estoque_minimo' => $this->estoque_minimo,
             'custo_medio' => $this->custo_medio,
             'observacoes' => $this->observacoes !== '' ? $this->observacoes : null,
+            'essencial' => $this->essencial,
         ]);
 
         session()->flash('success', 'Material cadastrado com sucesso.');
