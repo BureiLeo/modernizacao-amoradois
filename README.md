@@ -1,50 +1,32 @@
 ## Amor a Dois - Sistema de Gestão
 
-Aplicação PHP simples (sem framework) para gestão de produtos, materiais, vendas, perdas, compras e investimentos.
+Sistema web para gestão de clientes, produtos, materiais, estoque, compras, vendas, perdas e caixa da loja Amor a Dois Personalizados.
 
-### Requisitos
-- PHP 8+
-- MySQL 5.7+ ou MariaDB
-- Extensão PDO habilitada
+O sistema é uma aplicação **Laravel 13 + Livewire 3**, localizada em [`sistema-novo/`](./sistema-novo).
 
-### Configuração
-1. Copie o arquivo `config.example.php` para `config.php`:
-   ```php
-   cp config.example.php config.php
-   ```
-2. Edite `config.php` com suas credenciais de banco.
-3. Importe seu schema SQL (crie um dump ou gere manualmente as tabelas necessárias).
+> O sistema legado em PHP procedural (sem framework) que existia na raiz deste repositório foi descontinuado e removido após a migração completa dos dados e o deploy da versão nova em produção.
 
-### Estrutura principal
-| Arquivo | Função |
-|---------|--------|
-| `layout_start.php` / `layout_end.php` | Template base com sidebar e topo |
-| `menu.php` | Navegação lateral |
-| `auth.php` | Login / sessão |
-| `db.php` | Conexão PDO reutilizável |
-| `app.css` | Estilos (tema claro/escuro) |
-| `vendas.php` | Listagem de vendas |
-| `vendas_nova.php` | Registro de venda |
-| `produtos.php` | Produtos |
-| `materiais.php` | Materiais |
+### Como rodar localmente
 
-### Login
-Página de login está em `index.php` (tema escuro, responsivo). Crie usuários conforme sua lógica em `auth.php` (ajuste se quiser hash de senha).
+Veja as instruções completas em [`sistema-novo/README.md`](./sistema-novo/README.md).
 
-### Deploy (cPanel / hospedagem compartilhada)
-1. Enviar arquivos (exceto os ignorados no `.gitignore`).
-2. Criar banco de dados e usuário.
-3. Ajustar `config.php`.
-4. Garantir que a pasta pública aponte para onde está `index.php`.
+```
+cd sistema-novo
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm run build
+php artisan serve
+```
 
-### Segurança / Boas práticas sugeridas
-- Usar senhas com hash (`password_hash`).
-- Proteger `config.php` (não versionar — já ignorado).
-- Validar/filtrar entradas de formulários.
-- Adicionar CSRF tokens em ações críticas.
+### Produção
 
-### Desenvolvimento
-Para alterar estilos: editar `app.css` e, se necessário, incrementar `?v=` no `layout_start.php` para forçar refresh.
+Ambiente hospedado no Hostinger. O deploy consiste em:
+1. Atualizar o código em `~/repo` (clone do branch `main`) e sincronizar com `rsync` para `~/laravel_app` (fora do `public_html`, por segurança).
+2. Rodar `composer install --no-dev`, `php artisan migrate --force` e `php artisan config:cache/route:cache/view:cache`.
+3. Publicar o conteúdo de `public/` (incluindo `public/build`, gerado com `npm run build`) em `public_html`, com um `index.php` apontando para o caminho absoluto da aplicação.
 
 ### Licença
 Projeto interno. Ajuste conforme necessidade.
