@@ -1,0 +1,26 @@
+{
+  "node_modules/apexcharts/dist/apexcharts.esm.js": {
+    "file": "assets/apexcharts.esm-DOebf8KF.js",
+    "name": "apexcharts.esm",
+    "src": "node_modules/apexcharts/dist/apexcharts.esm.js",
+    "isDynamicEntry": true
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-DTq8TZK_.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Ca5A065E.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/apexcharts/dist/apexcharts.esm.js"
+    ]
+  }
+}

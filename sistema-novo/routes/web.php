@@ -24,7 +24,7 @@ use App\Livewire\Vendas\Index as VendasIndex;
 use App\Livewire\Vendas\Show as VendasShow;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome');
+Route::redirect('/', '/dashboard');
 
 Route::get('dashboard', DashboardIndex::class)
     ->middleware(['auth', 'verified'])
