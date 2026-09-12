@@ -26,6 +26,36 @@ class Material extends Model
         ];
     }
 
+    public function getStatusAttribute(): string
+    {
+        return $this->stockStatus();
+    }
+
+    public function stockStatus(): string
+    {
+        $estoque = (float) $this->estoque;
+        $minimo = (float) ($this->estoque_minimo ?? 0);
+
+        if ($estoque <= 0) {
+            return 'sem_estoque';
+        }
+
+        if ($minimo > 0 && $estoque <= $minimo) {
+            return 'baixo';
+        }
+
+        return 'normal';
+    }
+
+    public function stockStatusLabel(): string
+    {
+        return match ($this->stockStatus()) {
+            'sem_estoque' => 'Sem estoque',
+            'baixo' => 'Baixo',
+            default => 'Normal',
+        };
+    }
+
     public function produtoBom(): HasMany
     {
         return $this->hasMany(ProdutoBom::class);

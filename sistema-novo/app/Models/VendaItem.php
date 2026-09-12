@@ -37,6 +37,14 @@ class VendaItem extends Model
         return $this->belongsTo(Produto::class);
     }
 
+    /**
+     * Itens avulsos ("Outros") nao possuem produto: usam a descricao digitada.
+     */
+    public function nomeExibicao(): string
+    {
+        return $this->produto?->nome ?? ($this->descricao ?: 'Item avulso');
+    }
+
     public function produtoVariacao(): BelongsTo
     {
         return $this->belongsTo(ProdutoVariacao::class);

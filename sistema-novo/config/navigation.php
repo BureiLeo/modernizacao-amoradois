@@ -17,9 +17,9 @@ return [
     'primary' => [
         ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'dashboard'],
         ['key' => 'vendas', 'label' => 'Vendas', 'icon' => 'shopping-bag', 'route' => 'vendas.index'],
-        ['key' => 'pedidos', 'label' => 'Pedidos', 'icon' => 'clipboard-list', 'route' => 'pedidos.index'],
         ['key' => 'produtos', 'label' => 'Produtos', 'icon' => 'gift', 'route' => 'produtos.index'],
         ['key' => 'estoque', 'label' => 'Estoque', 'icon' => 'archive', 'route' => 'estoque.index'],
+        ['key' => 'compras', 'label' => 'Compras', 'icon' => 'truck', 'route' => 'compras.index'],
         ['key' => 'clientes', 'label' => 'Clientes', 'icon' => 'users', 'route' => 'clientes.index'],
         ['key' => 'fornecedores', 'label' => 'Fornecedores', 'icon' => 'truck', 'route' => 'fornecedores.index'],
         ['key' => 'financeiro', 'label' => 'Financeiro', 'icon' => 'wallet', 'route' => 'financeiro.index'],
@@ -36,7 +36,7 @@ return [
     // Chaves (do array 'primary') exibidas na bottom nav mobile, nesta
     // ordem, ao redor do botao central "+". "Mais" e sempre o ultimo
     // slot e abre o drawer com tudo que nao estiver aqui.
-    'bottom_nav' => ['dashboard', 'vendas', 'produtos'],
+    'bottom_nav' => ['dashboard', 'vendas', 'estoque'],
 
     // Acao do botao central "+" da bottom nav (Nova Venda, ou preparado
     // sem logica complexa enquanto a rota nao existir - Etapa 5 #12).

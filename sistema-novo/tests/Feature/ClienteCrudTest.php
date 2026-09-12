@@ -243,7 +243,7 @@ class ClienteCrudTest extends TestCase
     public function test_cliente_sem_vendas_mostra_estado_vazio(): void
     {
         $user = User::factory()->create();
-        $cliente = Cliente::factory()->create();
+        $cliente = Cliente::factory()->create(['nome' => 'Maria Souza']);
 
         Livewire::actingAs($user)->test(ClientesShow::class, ['cliente' => $cliente])
             ->assertSee($cliente->nome)

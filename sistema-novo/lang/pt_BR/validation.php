@@ -133,5 +133,13 @@ return [
         'novaImagem' => 'imagem',
         'password' => 'senha',
         'name' => 'nome',
+        'form.email' => 'e-mail',
+        'form.password' => 'senha',
+        'cliente_id' => 'cliente',
+        'produto_id' => 'produto',
+        'quantidade' => 'quantidade',
+        'forma_pagamento' => 'forma de pagamento',
+        'novoClienteNome' => 'nome',
+        'novoClienteTelefone' => 'telefone',
     ],
 ];

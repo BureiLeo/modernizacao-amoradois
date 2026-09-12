@@ -22,12 +22,23 @@ class Venda extends Model
             'data' => 'datetime',
             'subtotal' => 'decimal:2',
             'desconto' => 'decimal:2',
+            'frete' => 'decimal:2',
             'total' => 'decimal:2',
             'custo_total' => 'decimal:2',
             'lucro_total' => 'decimal:2',
             'pago' => 'boolean',
             'status' => VendaStatus::class,
         ];
+    }
+
+    public function isPendente(): bool
+    {
+        return (string) ($this->status ?? '') === VendaStatus::Pendente->value || ! $this->pago;
+    }
+
+    public function isPaga(): bool
+    {
+        return $this->pago || (string) ($this->status ?? '') === VendaStatus::Paga->value || (string) ($this->status ?? '') === VendaStatus::Concluida->value;
     }
 
     public function cliente(): BelongsTo

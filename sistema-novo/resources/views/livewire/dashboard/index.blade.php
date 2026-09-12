@@ -138,7 +138,7 @@
                     @foreach ($materiaisEstoqueBaixo as $material)
                         <li class="flex items-center justify-between gap-3">
                             <p class="text-sm font-medium text-brand-text truncate">{{ $material->nome }}</p>
-                            <x-ui.badge variant="warning">{{ rtrim(rtrim(number_format((float) $material->estoque, 3, ',', '.'), '0'), ',') }} {{ $material->unidade_base }}</x-ui.badge>
+                            <x-ui.badge variant="warning">{{ \App\Support\Format::quantidade($material->estoque) }} {{ $material->unidade_base }}</x-ui.badge>
                         </li>
                     @endforeach
                 </ul>

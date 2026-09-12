@@ -13,6 +13,10 @@
         'concluida' => ['label' => 'Concluída', 'variant' => 'success'],
         'concluido' => ['label' => 'Concluído', 'variant' => 'success'],
         'em_producao' => ['label' => 'Em produção', 'variant' => 'info'],
+        // Status de estoque (App\Models\Material::stockStatus()).
+        'normal' => ['label' => 'Em estoque', 'variant' => 'success'],
+        'baixo' => ['label' => 'Estoque baixo', 'variant' => 'warning'],
+        'sem_estoque' => ['label' => 'Sem estoque', 'variant' => 'danger'],
     ];
 
     $key = is_object($status) && method_exists($status, 'value') ? $status->value : (string) $status;

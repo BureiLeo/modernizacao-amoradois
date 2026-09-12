@@ -13,6 +13,8 @@ class Fornecedor extends Model
     /** @use HasFactory<FornecedorFactory> */
     use HasFactory, SoftDeletes;
 
+    protected $table = 'fornecedores';
+
     protected $guarded = ['id'];
 
     protected function casts(): array

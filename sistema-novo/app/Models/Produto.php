@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 class Produto extends Model
 {
@@ -39,6 +40,22 @@ class Produto extends Model
     public function bom(): HasMany
     {
         return $this->hasMany(ProdutoBom::class);
+    }
+
+    public function materialRequirements(int $quantidade = 1): Collection
+    {
+        return $this->bom()->with('material')->get()->map(function (ProdutoBom $item) use ($quantidade) {
+            return [
+                'material' => $item->material,
+                'quantidade' => (float) $item->quantidade * (float) $quantidade,
+                'material_id' => $item->material_id,
+            ];
+        });
+    }
+
+    public function hasBom(): bool
+    {
+        return $this->bom()->exists();
     }
 
     public function vendaItens(): HasMany
