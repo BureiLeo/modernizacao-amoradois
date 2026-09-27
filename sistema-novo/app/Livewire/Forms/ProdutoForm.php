@@ -4,6 +4,7 @@ namespace App\Livewire\Forms;
 
 use App\Models\Produto;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Livewire\Form;
 
@@ -22,6 +23,11 @@ class ProdutoForm extends Form
     public ?string $custo_referencia = null;
 
     public ?string $estoque_minimo = null;
+
+    /** @var array<int, array{material_id: int|string|null, quantidade: string}> */
+    public array $bom = [];
+
+    public string $margem_lucro = '';
 
     /** @var UploadedFile|null Nova imagem selecionada nesta sessao de edicao. */
     public $novaImagem = null;
@@ -44,6 +50,23 @@ class ProdutoForm extends Form
             'preco_venda' => ['required', 'regex:/^\d+([.,]\d{1,2})?$/'],
             'custo_referencia' => ['nullable', 'regex:/^\d+([.,]\d{1,2})?$/'],
             'estoque_minimo' => ['nullable', 'regex:/^\d+([.,]\d{1,3})?$/'],
+            'bom' => ['array'],
+            'bom.*.material_id' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('materiais', 'id')->whereNull('deleted_at'),
+            ],
+            'bom.*.quantidade' => [
+                'required',
+                'regex:/^\d+([.,]\d{1,4})?$/',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ((float) str_replace(',', '.', (string) $value) <= 0) {
+                        $fail('A quantidade deve ser maior que zero.');
+                    }
+                },
+            ],
+            'margem_lucro' => ['nullable', 'regex:/^\d+([.,]\d{1,2})?$/'],
             'novaImagem' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'ativo' => ['boolean'],
         ];
@@ -56,6 +79,12 @@ class ProdutoForm extends Form
             'preco_venda.regex' => 'Informe um preço válido (ex: 29,90).',
             'custo_referencia.regex' => 'Informe um valor válido (ex: 12,50).',
             'estoque_minimo.regex' => 'Informe uma quantidade válida (ex: 5).',
+            'bom.*.material_id.required' => 'Selecione o material.',
+            'bom.*.material_id.distinct' => 'Cada material pode aparecer apenas uma vez na receita.',
+            'bom.*.material_id.exists' => 'O material selecionado não está mais disponível.',
+            'bom.*.quantidade.required' => 'Informe a quantidade utilizada.',
+            'bom.*.quantidade.regex' => 'Informe uma quantidade válida com até 4 casas decimais.',
+            'margem_lucro.regex' => 'Informe uma porcentagem válida (ex: 30 ou 30,5).',
             'sku.unique' => 'Este SKU já está em uso por outro produto.',
         ];
     }
@@ -70,6 +99,14 @@ class ProdutoForm extends Form
         $this->custo_referencia = $produto->custo_referencia !== null ? (string) $produto->custo_referencia : null;
         $this->estoque_minimo = $produto->estoque_minimo !== null ? (string) $produto->estoque_minimo : null;
         $this->ativo = $produto->ativo;
+        $this->bom = $produto->bom()
+            ->orderBy('id')
+            ->get(['material_id', 'quantidade'])
+            ->map(fn ($item) => [
+                'material_id' => $item->material_id,
+                'quantidade' => (string) $item->quantidade,
+            ])
+            ->all();
     }
 
     /**
@@ -90,5 +127,57 @@ class ProdutoForm extends Form
                 : null,
             'ativo' => $this->ativo,
         ];
+    }
+
+    /**
+     * @return array<int, array{material_id: int, quantidade: string}>
+     */
+    public function bomNormalizado(): array
+    {
+        return array_map(fn (array $item) => [
+            'material_id' => (int) $item['material_id'],
+            'quantidade' => str_replace(',', '.', (string) $item['quantidade']),
+        ], $this->bom);
+    }
+
+    /**
+     * @param  Collection<int, object{id: int, custo_medio: string}>  $materiais
+     */
+    public function custoBom(Collection $materiais): float
+    {
+        $custos = $materiais->pluck('custo_medio', 'id');
+
+        return round(array_reduce($this->bom, function (float $total, array $item) use ($custos): float {
+            $quantidade = $this->numeroDecimal($item['quantidade'] ?? null);
+            $materialId = (int) ($item['material_id'] ?? 0);
+
+            if ($quantidade === null || $quantidade <= 0 || ! $custos->has($materialId)) {
+                return $total;
+            }
+
+            return $total + ($quantidade * (float) $custos->get($materialId));
+        }, 0.0), 6);
+    }
+
+    public function precoSugerido(float $custoBom): ?float
+    {
+        $margem = $this->numeroDecimal($this->margem_lucro);
+
+        if ($margem === null) {
+            return null;
+        }
+
+        return round($custoBom * (1 + ($margem / 100)), 2);
+    }
+
+    private function numeroDecimal(mixed $valor): ?float
+    {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+
+        $normalizado = str_replace(',', '.', (string) $valor);
+
+        return is_numeric($normalizado) ? (float) $normalizado : null;
     }
 }

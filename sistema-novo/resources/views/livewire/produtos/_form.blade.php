@@ -22,6 +22,91 @@
     </div>
 </x-ui.card>
 
+{{-- Receita / BOM --}}
+<x-ui.card class="mt-4">
+    <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+            <h2 class="font-semibold text-brand-text mb-1">Materiais utilizados (BOM)</h2>
+            <p class="text-xs text-brand-text-muted">
+                Informe quanto de cada material é usado para produzir uma unidade deste produto.
+            </p>
+        </div>
+        <x-ui.button type="button" variant="outline" size="sm" wire:click="adicionarMaterial">
+            <x-icon name="plus" class="w-4 h-4" />
+            Material
+        </x-ui.button>
+    </div>
+
+    @if ($materiais->isEmpty())
+        <x-ui.empty-state
+            icon="archive"
+            title="Nenhum material cadastrado"
+            description="Cadastre um material no estoque antes de montar a receita."
+        />
+    @elseif ($form->bom === [])
+        <x-ui.empty-state
+            icon="archive"
+            title="Sem materiais na receita"
+            description="Clique em Material para começar a montar o BOM deste produto."
+        />
+    @else
+        <div class="space-y-3">
+            @foreach ($form->bom as $index => $item)
+                @php
+                    $materialSelecionado = $materiais->firstWhere('id', (int) ($item['material_id'] ?? 0));
+                    $quantidade = (float) str_replace(',', '.', (string) ($item['quantidade'] ?? 0));
+                    $subtotalMaterial = $materialSelecionado
+                        ? $quantidade * (float) $materialSelecionado->custo_medio
+                        : 0;
+                @endphp
+                <div wire:key="bom-item-{{ $index }}" class="rounded-brand-sm border border-brand-border/50 p-3">
+                    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] gap-3 items-start">
+                        <x-ui.select
+                            name="bom_{{ $index }}_material_id"
+                            label="Material *"
+                            wire:model.live="form.bom.{{ $index }}.material_id"
+                            placeholder="Selecione"
+                        >
+                            @foreach ($materiais as $material)
+                                <option value="{{ $material->id }}">
+                                    {{ $material->nome }} — R$ {{ number_format((float) $material->custo_medio, 4, ',', '.') }}/{{ $material->unidade_base }}
+                                </option>
+                            @endforeach
+                        </x-ui.select>
+
+                        <x-ui.input
+                            name="bom_{{ $index }}_quantidade"
+                            label="Quantidade *"
+                            wire:model.live.debounce.300ms="form.bom.{{ $index }}.quantidade"
+                            inputmode="decimal"
+                            placeholder="1"
+                            :helper="$materialSelecionado ? 'Em '.$materialSelecionado->unidade_base : null"
+                        />
+
+                        <button
+                            type="button"
+                            wire:click="removerMaterial({{ $index }})"
+                            class="md:mt-8 min-h-[44px] px-2 text-sm font-medium text-brand-danger hover:underline"
+                        >
+                            Remover
+                        </button>
+                    </div>
+
+                    @if ($materialSelecionado)
+                        <p class="mt-2 text-xs text-brand-text-muted">
+                            Custo neste produto: R$ {{ number_format($subtotalMaterial, 4, ',', '.') }}
+                        </p>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    @error('form.bom')
+        <p class="mt-3 text-xs text-brand-danger">{{ $message }}</p>
+    @enderror
+</x-ui.card>
+
 {{-- Preco --}}
 <x-ui.card class="mt-4">
     <h2 class="font-semibold text-brand-text mb-1">Preço e custo</h2>
@@ -33,6 +118,36 @@
         <x-ui.input name="preco_venda" label="Preço de venda (R$) *" wire:model="form.preco_venda" inputmode="decimal" placeholder="0,00" />
         <x-ui.input name="custo_referencia" label="Custo de referência (R$)" wire:model="form.custo_referencia" inputmode="decimal" placeholder="0,00" />
         <x-ui.input name="estoque_minimo" label="Estoque mínimo (opcional)" wire:model="form.estoque_minimo" inputmode="decimal" placeholder="0" />
+    </div>
+
+    <div class="mt-4 rounded-brand-sm border border-brand-border/50 bg-brand-soft/20 p-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div>
+                <p class="text-xs text-brand-text-muted">Custo calculado da receita</p>
+                <p class="mt-1 text-lg font-semibold text-brand-text">R$ {{ number_format($custoBom, 2, ',', '.') }}</p>
+            </div>
+
+            <x-ui.input
+                name="margem_lucro"
+                label="Porcentagem sobre o custo (%)"
+                wire:model.live.debounce.300ms="form.margem_lucro"
+                inputmode="decimal"
+                placeholder="Ex: 30"
+            />
+
+            <div>
+                <p class="text-xs text-brand-text-muted">Preço sugerido</p>
+                <p class="mt-1 text-lg font-semibold text-brand-primary">
+                    {{ $precoSugerido !== null ? 'R$ '.number_format($precoSugerido, 2, ',', '.') : '—' }}
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-3 flex justify-end">
+            <x-ui.button type="button" variant="outline" size="sm" wire:click="aplicarPrecoSugerido">
+                Usar preço sugerido
+            </x-ui.button>
+        </div>
     </div>
 </x-ui.card>
 

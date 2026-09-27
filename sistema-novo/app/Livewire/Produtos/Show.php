@@ -34,8 +34,6 @@ class Show extends Component
 
     public function render(): View
     {
-        // BOM em somente leitura (Etapa 6/7 #38) - a edicao completa
-        // fica para a etapa de Materiais/Estoque.
         $bom = $this->produto->bom()->with('material:id,nome,unidade_base')->get();
 
         // Historico de vendas: agregados via query, sem N+1 (Etapa 6/7 #39/#62).

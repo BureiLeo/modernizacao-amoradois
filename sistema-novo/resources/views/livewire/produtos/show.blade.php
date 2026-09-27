@@ -60,7 +60,7 @@
             <x-ui.card>
                 <h2 class="font-semibold text-brand-text mb-1">Materiais utilizados (BOM)</h2>
                 <p class="text-xs text-brand-text-muted mb-4">
-                    Somente leitura nesta etapa — a edição da receita será feita junto do módulo de Materiais/Estoque.
+                    Para alterar esta receita, use a opção Editar no topo da página.
                 </p>
 
                 @if ($bom->isEmpty())

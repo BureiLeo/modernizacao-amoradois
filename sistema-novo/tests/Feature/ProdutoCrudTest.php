@@ -121,6 +121,75 @@ class ProdutoCrudTest extends TestCase
         $this->assertEquals(29.90, (float) $produto->preco_venda);
     }
 
+    public function test_criar_produto_com_bom(): void
+    {
+        $user = $this->admin();
+        $material = Material::factory()->create(['nome' => 'Caneca Branca']);
+
+        Livewire::actingAs($user)->test(ProdutosCreate::class)
+            ->set('form.nome', 'Caneca Personalizada')
+            ->set('form.preco_venda', '35,00')
+            ->call('adicionarMaterial')
+            ->set('form.bom.0.material_id', $material->id)
+            ->set('form.bom.0.quantidade', '1,5')
+            ->call('salvar')
+            ->assertHasNoErrors();
+
+        $produto = Produto::where('nome', 'Caneca Personalizada')->firstOrFail();
+        $this->assertDatabaseHas('produto_bom', [
+            'produto_id' => $produto->id,
+            'material_id' => $material->id,
+            'quantidade' => 1.5,
+        ]);
+    }
+
+    public function test_bom_nao_permite_material_duplicado(): void
+    {
+        $user = $this->admin();
+        $material = Material::factory()->create();
+
+        Livewire::actingAs($user)->test(ProdutosCreate::class)
+            ->set('form.nome', 'Produto Duplicado')
+            ->set('form.preco_venda', '20,00')
+            ->set('form.bom', [
+                ['material_id' => $material->id, 'quantidade' => '1'],
+                ['material_id' => $material->id, 'quantidade' => '2'],
+            ])
+            ->call('salvar')
+            ->assertHasErrors(['form.bom.1.material_id' => 'distinct']);
+    }
+
+    public function test_bom_exige_quantidade_maior_que_zero(): void
+    {
+        $user = $this->admin();
+        $material = Material::factory()->create();
+
+        Livewire::actingAs($user)->test(ProdutosCreate::class)
+            ->set('form.nome', 'Produto Sem Quantidade')
+            ->set('form.preco_venda', '20,00')
+            ->set('form.bom', [
+                ['material_id' => $material->id, 'quantidade' => '00,00'],
+            ])
+            ->call('salvar')
+            ->assertHasErrors(['form.bom.0.quantidade']);
+    }
+
+    public function test_calcula_e_aplica_preco_sugerido_com_porcentagem(): void
+    {
+        $user = $this->admin();
+        $material = Material::factory()->create(['custo_medio' => 10]);
+
+        Livewire::actingAs($user)->test(ProdutosCreate::class)
+            ->set('form.bom', [
+                ['material_id' => $material->id, 'quantidade' => '2'],
+            ])
+            ->set('form.margem_lucro', '50')
+            ->assertViewHas('custoBom', 20.0)
+            ->assertViewHas('precoSugerido', 30.0)
+            ->call('aplicarPrecoSugerido')
+            ->assertSet('form.preco_venda', '30,00');
+    }
+
     public function test_produto_sem_imagem_funciona_normalmente(): void
     {
         $user = $this->admin();
@@ -260,6 +329,36 @@ class ProdutoCrudTest extends TestCase
             ->set('form.preco_venda', (string) $produto->preco_venda)
             ->call('salvar')
             ->assertHasNoErrors();
+    }
+
+    public function test_editar_produto_substitui_o_bom(): void
+    {
+        $user = $this->admin();
+        $produto = Produto::factory()->create();
+        $materialAntigo = Material::factory()->create();
+        $materialNovo = Material::factory()->create();
+        ProdutoBom::factory()->create([
+            'produto_id' => $produto->id,
+            'material_id' => $materialAntigo->id,
+            'quantidade' => 1,
+        ]);
+
+        Livewire::actingAs($user)->test(ProdutosEdit::class, ['produto' => $produto])
+            ->assertSet('form.bom.0.material_id', $materialAntigo->id)
+            ->set('form.bom.0.material_id', $materialNovo->id)
+            ->set('form.bom.0.quantidade', '2,25')
+            ->call('salvar')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseMissing('produto_bom', [
+            'produto_id' => $produto->id,
+            'material_id' => $materialAntigo->id,
+        ]);
+        $this->assertDatabaseHas('produto_bom', [
+            'produto_id' => $produto->id,
+            'material_id' => $materialNovo->id,
+            'quantidade' => 2.25,
+        ]);
     }
 
     // ==================== DETALHES / BOM / VENDAS ====================

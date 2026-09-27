@@ -3,10 +3,12 @@
 namespace App\Livewire\Produtos;
 
 use App\Livewire\Forms\ProdutoForm;
+use App\Livewire\Produtos\Concerns\GerenciaBom;
 use App\Models\Categoria;
 use App\Models\Produto;
 use App\Services\Produtos\ProductImageService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -14,7 +16,7 @@ use Livewire\WithFileUploads;
 #[Layout('layouts.app')]
 class Create extends Component
 {
-    use WithFileUploads;
+    use GerenciaBom, WithFileUploads;
 
     public ProdutoForm $form;
 
@@ -35,7 +37,12 @@ class Create extends Component
             $dados['imagem'] = $imageService->store($this->form->novaImagem);
         }
 
-        $produto = Produto::create($dados);
+        $produto = DB::transaction(function () use ($dados): Produto {
+            $produto = Produto::create($dados);
+            $this->salvarBom($produto);
+
+            return $produto;
+        });
 
         session()->flash('success', 'Produto cadastrado com sucesso.');
 
@@ -45,7 +52,12 @@ class Create extends Component
     public function render(): View
     {
         $categorias = Categoria::where('ativo', true)->orderBy('nome')->get(['id', 'nome']);
+        $materiais = $this->materiaisDisponiveis();
 
-        return view('livewire.produtos.create', compact('categorias'));
+        return view('livewire.produtos.create', [
+            'categorias' => $categorias,
+            'materiais' => $materiais,
+            ...$this->resumoPreco($materiais),
+        ]);
     }
 }
