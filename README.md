@@ -23,10 +23,7 @@ php artisan serve
 
 ### Produção
 
-Ambiente hospedado no Hostinger. O deploy consiste em:
-1. Atualizar o código em `~/repo` (clone do branch `main`) e sincronizar com `rsync` para `~/laravel_app` (fora do `public_html`, por segurança).
-2. Rodar `composer install --no-dev`, `php artisan migrate --force` e `php artisan config:cache/route:cache/view:cache`.
-3. Publicar o conteúdo de `public/` (incluindo `public/build`, gerado com `npm run build`) em `public_html`, com um `index.php` apontando para o caminho absoluto da aplicação.
+Configure as variáveis de ambiente e credenciais diretamente no servidor, sem versionar o arquivo `.env`. Mantenha a aplicação fora do diretório público, publique apenas o conteúdo de `public/` e execute as dependências e migrações conforme o processo do provedor de hospedagem.
 
 ### Licença
 Projeto interno. Ajuste conforme necessidade.

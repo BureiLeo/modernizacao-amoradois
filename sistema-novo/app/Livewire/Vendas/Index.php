@@ -50,6 +50,7 @@ class Index extends Component
             })
             ->when($this->filtro === 'pagas', fn ($query) => $query->where('pago', true))
             ->when($this->filtro === 'pendentes', fn ($query) => $query->where('pago', false))
+            ->when($this->filtro === 'feira', fn ($query) => $query->where('canal', 'feira'))
             ->when($this->ordenar === 'recentes', fn ($query) => $query->orderByDesc('data'))
             ->when($this->ordenar === 'maior', fn ($query) => $query->orderByDesc('total'))
             ->when($this->ordenar === 'menor', fn ($query) => $query->orderBy('total'))

@@ -2,8 +2,12 @@
     <x-ui.page-header title="Venda #{{ $venda->id }}" subtitle="Detalhes da operação." />
 
     <div class="flex flex-wrap gap-3">
-        <a href="{{ route('vendas.edit', $venda) }}" wire:navigate class="rounded-brand-sm bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white">Editar</a>
-        <button type="button" wire:click="excluir" class="rounded-brand-sm border border-red-500/60 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600">Excluir</button>
+        @if (! $venda->caixa_feira_id && (! $venda->pago || ! $venda->itens->contains('conta', 'impressao_3d')))
+            <a href="{{ route('vendas.edit', $venda) }}" wire:navigate class="rounded-brand-sm bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white">Editar</a>
+        @endif
+        @if ($venda->pagamentos->isEmpty())
+            <button type="button" wire:click="excluir" class="rounded-brand-sm border border-red-500/60 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600">Excluir</button>
+        @endif
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">

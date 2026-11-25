@@ -23,7 +23,7 @@
          ====================================================== --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
         <x-ui.stat-card
-            label="Saldo em caixa"
+            label="Saldo em caixa · Canecas"
             :value="$showSaldoCaixa ? 'R$ '.number_format($saldoCaixa, 2, ',', '.') : '••••••'"
             icon="wallet"
             subtitle="Saldo histórico total"

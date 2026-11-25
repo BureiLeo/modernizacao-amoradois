@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\ContaCaixa;
 use App\Models\Produto;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -13,6 +14,8 @@ class ProdutoForm extends Form
     public ?Produto $produto = null;
 
     public ?int $categoria_id = null;
+
+    public string $conta = 'canecas';
 
     public string $nome = '';
 
@@ -38,6 +41,7 @@ class ProdutoForm extends Form
     {
         return [
             'categoria_id' => ['nullable', 'exists:categorias,id'],
+            'conta' => ['required', Rule::in(array_column(ContaCaixa::linhas(), 'value'))],
             'nome' => ['required', 'string', 'max:120'],
             'sku' => [
                 'nullable', 'string', 'max:60',
@@ -93,6 +97,7 @@ class ProdutoForm extends Form
     {
         $this->produto = $produto;
         $this->categoria_id = $produto->categoria_id;
+        $this->conta = $produto->conta ?? ContaCaixa::Canecas->value;
         $this->nome = $produto->nome;
         $this->sku = $produto->sku;
         $this->preco_venda = (string) $produto->preco_venda;
@@ -116,6 +121,7 @@ class ProdutoForm extends Form
     {
         return [
             'categoria_id' => $this->categoria_id ?: null,
+            'conta' => $this->conta,
             'nome' => trim($this->nome),
             'sku' => $this->sku ? trim($this->sku) : null,
             'preco_venda' => str_replace(',', '.', (string) $this->preco_venda),

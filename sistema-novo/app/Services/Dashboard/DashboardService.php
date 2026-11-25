@@ -2,6 +2,7 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\ContaCaixa;
 use App\Enums\StatusPagamento;
 use App\Models\CaixaMovimento;
 use App\Models\Cliente;
@@ -91,7 +92,7 @@ class DashboardService
     }
 
     /**
-     * Saldo em caixa (histórico completo, não filtrado pelo período do
+     * Saldo da conta Canecas (histórico completo, não filtrado pelo período do
      * dashboard — é um saldo "atual", igual ao caixa.php do sistema
      * legado). Soma direta de caixa_movimentos.valor, que já é gravado
      * com o sinal correto (entrada positiva, saída negativa) pela regra
@@ -103,7 +104,7 @@ class DashboardService
      */
     public function saldoCaixa(): float
     {
-        return (float) CaixaMovimento::query()->sum('valor');
+        return (float) CaixaMovimento::query()->where('conta', ContaCaixa::Canecas->value)->sum('valor');
     }
 
     /**

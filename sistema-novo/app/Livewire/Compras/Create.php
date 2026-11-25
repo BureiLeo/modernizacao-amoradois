@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Compras;
 
+use App\Enums\ContaCaixa;
 use App\Models\Compra;
 use App\Models\Fornecedor;
 use App\Models\Material;
@@ -9,6 +10,7 @@ use App\Services\Compras\CompraService;
 use App\Services\Compras\NfeXmlParser;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -32,6 +34,8 @@ class Create extends Component
     public string $desconto = '0';
 
     public string $forma_pagamento = '';
+
+    public string $conta = 'canecas';
 
     public bool $pago = false;
 
@@ -140,6 +144,7 @@ class Create extends Component
             'numero_nota' => ['nullable', 'string', 'max:30'],
             'chave_nfe' => ['nullable', 'string', 'max:44'],
             'forma_pagamento' => ['nullable', 'string', 'max:30'],
+            'conta' => ['required', Rule::in(array_column(ContaCaixa::linhas(), 'value'))],
             'observacoes' => ['nullable', 'string', 'max:1000'],
             'itens' => ['required', 'array', 'min:1'],
         ]);
@@ -196,6 +201,7 @@ class Create extends Component
                 'desconto' => $this->numero($this->desconto),
                 'forma_pagamento' => $this->forma_pagamento !== '' ? $this->forma_pagamento : null,
                 'pago' => $this->pago,
+                'conta' => $this->conta,
                 'observacoes' => $this->observacoes !== '' ? $this->observacoes : null,
                 'itens' => $itens,
             ], auth()->id());

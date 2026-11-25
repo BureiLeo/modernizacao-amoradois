@@ -3,6 +3,7 @@
 namespace App\Services\Compras;
 
 use App\Enums\CaixaTipo;
+use App\Enums\ContaCaixa;
 use App\Models\CaixaMovimento;
 use App\Models\Compra;
 use App\Models\Material;
@@ -33,6 +34,11 @@ class CompraService
     public function registerBatch(array $data, ?int $userId = null): Collection
     {
         $itens = array_values($data['itens'] ?? []);
+        $conta = ContaCaixa::tryFrom($data['conta'] ?? ContaCaixa::Canecas->value);
+
+        if (! in_array($conta, ContaCaixa::linhas(), true)) {
+            throw new InvalidArgumentException('Selecione a conta que paga a compra.');
+        }
 
         if ($itens === []) {
             throw new InvalidArgumentException('Adicione pelo menos um item à compra.');
@@ -71,7 +77,7 @@ class CompraService
         $rateioFrete = $this->rateio($valores, $frete);
         $rateioDesconto = $this->rateio($valores, $desconto);
 
-        return DB::transaction(function () use ($data, $itens, $valores, $rateioFrete, $rateioDesconto, $userId) {
+        return DB::transaction(function () use ($data, $itens, $valores, $rateioFrete, $rateioDesconto, $userId, $conta) {
             $loteId = (string) Str::uuid();
             $compras = collect();
 
@@ -85,6 +91,7 @@ class CompraService
 
                 $compra = Compra::query()->create([
                     'lote_id' => $loteId,
+                    'conta' => $conta->value,
                     'data' => $data['data'] ?? now()->toDateString(),
                     'material_id' => $material->getKey(),
                     'fornecedor_id' => $data['fornecedor_id'] ?? null,
@@ -200,6 +207,7 @@ class CompraService
                         'data' => now(),
                         'descricao' => 'Estorno da compra'.($compras->first()->numero_nota ? ' NF '.$compras->first()->numero_nota : ' #'.$compras->first()->id),
                         'valor' => abs((float) $caixa->valor),
+                        'conta' => $caixa->conta,
                     ]
                 );
             }
@@ -242,6 +250,7 @@ class CompraService
                 'descricao' => 'Compra'.($primeira->numero_nota ? ' NF '.$primeira->numero_nota : ' #'.$primeira->id),
                 // Valor com sinal: saida de caixa e negativa.
                 'valor' => -$total,
+                'conta' => $primeira->conta ?? ContaCaixa::Canecas->value,
             ]
         );
     }

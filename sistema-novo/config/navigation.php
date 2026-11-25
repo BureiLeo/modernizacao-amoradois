@@ -17,6 +17,7 @@ return [
     'primary' => [
         ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'dashboard'],
         ['key' => 'vendas', 'label' => 'Vendas', 'icon' => 'shopping-bag', 'route' => 'vendas.index'],
+        ['key' => 'pdv', 'label' => 'PDV da feira', 'icon' => 'wallet', 'route' => 'vendas.pdv'],
         ['key' => 'produtos', 'label' => 'Produtos', 'icon' => 'gift', 'route' => 'produtos.index'],
         ['key' => 'estoque', 'label' => 'Estoque', 'icon' => 'archive', 'route' => 'estoque.index'],
         ['key' => 'compras', 'label' => 'Compras', 'icon' => 'truck', 'route' => 'compras.index'],

@@ -66,6 +66,8 @@
                 <div>
                     <dt class="text-brand-text-muted">Forma de pagamento</dt>
                     <dd class="font-medium text-brand-text">{{ $nota->forma_pagamento ?: 'A definir' }}</dd>
+                    <dt class="mt-2 text-brand-text-muted">Conta de pagamento</dt>
+                    <dd class="font-medium text-brand-text">{{ \App\Enums\ContaCaixa::from($nota->conta)->label() }}</dd>
                 </div>
                 <div>
                     <dt class="text-brand-text-muted">Status</dt>

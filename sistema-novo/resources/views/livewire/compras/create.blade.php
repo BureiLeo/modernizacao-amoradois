@@ -85,6 +85,13 @@
                     </select>
                     @error('forma_pagamento') <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
+                <div>
+                    <x-ui.select name="conta" label="Conta de pagamento" wire:model="conta">
+                        @foreach (\App\Enums\ContaCaixa::linhas() as $linha)
+                            <option value="{{ $linha->value }}">{{ $linha->label() }}</option>
+                        @endforeach
+                    </x-ui.select>
+                </div>
 
                 <div class="flex items-end">
                     <label class="flex items-center gap-2 text-sm font-medium text-brand-text">

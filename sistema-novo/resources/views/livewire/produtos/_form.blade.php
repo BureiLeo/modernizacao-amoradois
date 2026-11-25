@@ -14,6 +14,12 @@
 
         <x-ui.input name="sku" label="SKU" wire:model="form.sku" placeholder="Ex: 0001" helper="Opcional, mas deve ser único." />
 
+        <x-ui.select name="conta" label="Linha de venda" wire:model="form.conta">
+            @foreach (\App\Enums\ContaCaixa::linhas() as $linha)
+                <option value="{{ $linha->value }}">{{ $linha->label() }}</option>
+            @endforeach
+        </x-ui.select>
+
         <x-ui.select name="categoria_id" label="Categoria" wire:model="form.categoria_id" placeholder="Sem categoria">
             @foreach ($categorias as $categoria)
                 <option value="{{ $categoria->id }}">{{ $categoria->nome }}</option>

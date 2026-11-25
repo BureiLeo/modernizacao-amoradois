@@ -1,6 +1,7 @@
 <div>
     <x-ui.page-header title="Vendas" subtitle="{{ $vendas->total() }} venda(s) no registro.">
         <x-slot name="actions">
+            <x-ui.button :href="route('vendas.pdv')" wire:navigate variant="outline">PDV da feira</x-ui.button>
             <x-ui.button :href="route('vendas.create')" wire:navigate>
                 <x-icon name="plus" class="w-4 h-4" />
                 Nova venda
@@ -21,7 +22,7 @@
     </div>
 
     <div class="flex gap-2 overflow-x-auto mb-4">
-        @foreach (['todas' => 'Todas', 'pagas' => 'Pagas', 'pendentes' => 'Pendentes'] as $value => $label)
+        @foreach (['todas' => 'Todas', 'pagas' => 'Pagas', 'pendentes' => 'Pendentes', 'feira' => 'Feira'] as $value => $label)
             <button
                 type="button"
                 wire:click="$set('filtro', '{{ $value }}')"

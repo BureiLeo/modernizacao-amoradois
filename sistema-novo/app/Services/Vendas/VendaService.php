@@ -2,9 +2,11 @@
 
 namespace App\Services\Vendas;
 
+use App\Enums\ContaCaixa;
 use App\Enums\FormaPagamento;
 use App\Enums\StatusPagamento;
 use App\Enums\VendaStatus;
+use App\Models\CaixaFeira;
 use App\Models\CaixaMovimento;
 use App\Models\Pagamento;
 use App\Models\Produto;
@@ -31,6 +33,14 @@ class VendaService
         }
 
         return DB::transaction(function () use ($payload, $itens) {
+            if (isset($payload['caixa_feira_id'])) {
+                $caixa = CaixaFeira::query()->lockForUpdate()->findOrFail($payload['caixa_feira_id']);
+
+                if (! $caixa->aberto) {
+                    throw new InvalidArgumentException('Este caixa foi fechado. Abra o PDV do caixa atual para registrar a venda.');
+                }
+            }
+
             ['subtotal' => $subtotal, 'linhas' => $linhas] = $this->montarLinhas($itens);
 
             $desconto = (float) ($payload['desconto'] ?? 0);
@@ -45,7 +55,7 @@ class VendaService
             $status = $payload['status'] ?? 'pendente';
             $pago = (bool) ($payload['pago'] ?? ($status === 'paga' || $status === 'concluida'));
 
-            $venda = Venda::query()->create([
+            $dados = [
                 'data' => now(),
                 'cliente_id' => $payload['cliente_id'] ?? null,
                 'user_id' => $payload['user_id'] ?? auth()->id(),
@@ -58,14 +68,22 @@ class VendaService
                 'forma_pagamento' => $payload['forma_pagamento'] ?? null,
                 'pago' => $pago,
                 'canal' => $payload['canal'] ?? null,
+                'caixa_feira_id' => $payload['caixa_feira_id'] ?? null,
                 'observacoes' => $payload['observacoes'] ?? null,
                 'status' => ($pago ? VendaStatus::Paga : VendaStatus::Pendente)->value,
-            ]);
+            ];
+
+            if (isset($payload['pdv_token'])) {
+                $dados['pdv_token'] = $payload['pdv_token'];
+            }
+
+            $venda = Venda::query()->create($dados);
 
             foreach ($linhas as $linha) {
                 VendaItem::query()->create([
                     'venda_id' => $venda->id,
                     'produto_id' => $linha['produto']?->id,
+                    'conta' => $linha['produto']?->conta ?? ContaCaixa::Canecas->value,
                     'produto_variacao_id' => null,
                     'descricao' => $linha['descricao'],
                     'quantidade' => $linha['quantidade'],
@@ -109,6 +127,16 @@ class VendaService
     public function update(Venda $venda, array $payload): Venda
     {
         return DB::transaction(function () use ($venda, $payload) {
+            $venda = Venda::query()->lockForUpdate()->findOrFail($venda->id);
+            $conta3d = ContaCaixa::Impressao3d->value;
+
+            if ($venda->caixa_feira_id || ($venda->pago && (
+                $venda->itens()->where('conta', $conta3d)->exists()
+                || Produto::query()->where('conta', $conta3d)->whereKey(array_filter(array_column($payload['itens'] ?? [], 'produto_id')))->exists()
+            ))) {
+                throw new InvalidArgumentException('Esta venda já foi registrada no caixa e seus valores estão vinculados às contas.');
+            }
+
             $userId = $payload['user_id'] ?? auth()->id();
 
             if (array_key_exists('itens', $payload)) {
@@ -129,6 +157,7 @@ class VendaService
                     VendaItem::query()->create([
                         'venda_id' => $venda->id,
                         'produto_id' => $linha['produto']?->id,
+                        'conta' => $linha['produto']?->conta ?? ContaCaixa::Canecas->value,
                         'produto_variacao_id' => null,
                         'descricao' => $linha['descricao'],
                         'quantidade' => $linha['quantidade'],
@@ -258,6 +287,8 @@ class VendaService
         $formaPagamento ??= FormaPagamento::Pix->value;
 
         DB::transaction(function () use ($venda, $formaPagamento) {
+            $venda = Venda::query()->lockForUpdate()->findOrFail($venda->id);
+
             if ($venda->pagamentos()->where('status', StatusPagamento::Pago->value)->exists()) {
                 return;
             }
@@ -277,14 +308,45 @@ class VendaService
                 'status' => VendaStatus::Paga->value,
             ]);
 
-            CaixaMovimento::query()->create([
+            $dados = [
                 'data' => now(),
                 'tipo' => 'venda',
                 'ref_tabela' => 'vendas',
                 'ref_id' => $venda->id,
                 'descricao' => 'Entrada de venda #'.$venda->id,
-                'valor' => $venda->total,
-            ]);
+            ];
+
+            if ($venda->caixa_feira_id) {
+                CaixaMovimento::query()->create($dados + ['conta' => ContaCaixa::Feira->value, 'valor' => $venda->total]);
+
+                return;
+            }
+
+            $itens3d = $venda->itens()->where('conta', ContaCaixa::Impressao3d->value)->orderBy('id')->get();
+            $total = (float) $venda->total;
+            $valor3d = 0.0;
+
+            if ($itens3d->isNotEmpty()) {
+                $valor3d = (float) $venda->subtotal > 0
+                    ? round($total * (float) $itens3d->sum('subtotal') / (float) $venda->subtotal, 2)
+                    : ($venda->itens()->where('conta', ContaCaixa::Canecas->value)->exists() ? 0.0 : $total);
+
+                if ($valor3d > 0) {
+                    CaixaMovimento::query()->create(array_replace($dados, [
+                        'ref_tabela' => 'venda_itens',
+                        'ref_id' => $itens3d->first()->id,
+                        'conta' => ContaCaixa::Impressao3d->value,
+                        'valor' => $valor3d,
+                    ]));
+                }
+            }
+
+            if ($valor3d < $total || $itens3d->isEmpty()) {
+                CaixaMovimento::query()->create($dados + [
+                    'conta' => ContaCaixa::Canecas->value,
+                    'valor' => round($total - $valor3d, 2),
+                ]);
+            }
         });
     }
 }

@@ -1,7 +1,7 @@
 # Migração de Dados do Sistema Legado (Etapa 4)
 
 Este documento descreve o pipeline que migra os dados históricos do sistema
-antigo (PHP procedural, banco `u323377136_loja`) para o novo schema Laravel,
+antigo (PHP procedural, banco legado) para o novo schema Laravel,
 preservando o estado histórico sem reprocessar regras de negócio.
 
 ## Objetivo
@@ -23,14 +23,14 @@ LEGACY_DB_PASSWORD=<senha>
 ```
 
 Para desenvolvimento/teste local, a estratégia recomendada (e a usada para
-validar esta etapa) é **importar o dump legado (`u323377136_loja.sql`) para
+validar esta etapa) é **importar o dump legado (`amoradois_legacy.sql`) para
 um banco MariaDB local**, em vez de usar o parser de SQL ou conectar direto
 na produção:
 
 ```powershell
 # Exemplo (MariaDB local instalado via winget nesta máquina):
 mysql -u seu_usuario -p -e "CREATE DATABASE amoradois_legacy CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -u seu_usuario -p amoradois_legacy < u323377136_loja.sql
+mysql -u seu_usuario -p amoradois_legacy < amoradois_legacy.sql
 ```
 
 Depois aponte `LEGACY_DB_DATABASE=amoradois_legacy` (e demais credenciais
@@ -236,7 +236,7 @@ dry-run, idempotência e migração por módulo (`--only`).
 - A conexão `legacy` real de produção (host além de `localhost`) ainda não
   foi confirmada como acessível a partir de fora do ambiente de hospedagem
   (ver Etapa 1/2) — a migração real para produção dependerá de resolver
-  esse acesso (Remote MySQL do cPanel, túnel SSH, ou exportar/importar o
+  esse acesso (acesso remoto ao banco, túnel SSH, ou exportar/importar o
   dump manualmente) antes de ser executada de fato.
 - `pagamentos` usa uma estratégia de idempotência simples (1 registro por
   `venda_id`): se, no futuro, o sistema novo já em produção permitir vários

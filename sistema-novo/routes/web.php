@@ -10,6 +10,7 @@ use App\Livewire\Compras\Index as ComprasIndex;
 use App\Livewire\Compras\Show as ComprasShow;
 use App\Livewire\Dashboard\Index as DashboardIndex;
 use App\Livewire\Estoque\Index as EstoqueIndex;
+use App\Livewire\Financeiro;
 use App\Livewire\Materiais\Create as MateriaisCreate;
 use App\Livewire\Materiais\Edit as MateriaisEdit;
 use App\Livewire\Materiais\Show as MateriaisShow;
@@ -21,6 +22,7 @@ use App\Livewire\Produtos\Show as ProdutosShow;
 use App\Livewire\Vendas\Create as VendasCreate;
 use App\Livewire\Vendas\Edit as VendasEdit;
 use App\Livewire\Vendas\Index as VendasIndex;
+use App\Livewire\Vendas\Pdv as VendasPdv;
 use App\Livewire\Vendas\Show as VendasShow;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +35,8 @@ Route::get('dashboard', DashboardIndex::class)
 Route::get('categorias', CategoriasIndex::class)
     ->middleware(['auth'])
     ->name('categorias.index');
+
+Route::get('financeiro', Financeiro::class)->middleware('auth')->name('financeiro.index');
 
 Route::middleware(['auth'])->prefix('clientes')->name('clientes.')->group(function () {
     Route::get('/', ClientesIndex::class)->name('index');
@@ -51,6 +55,7 @@ Route::middleware(['auth'])->prefix('produtos')->name('produtos.')->group(functi
 Route::middleware(['auth'])->prefix('vendas')->name('vendas.')->group(function () {
     Route::get('/', VendasIndex::class)->name('index');
     Route::get('/create', VendasCreate::class)->name('create');
+    Route::get('/pdv', VendasPdv::class)->name('pdv');
     Route::get('/{venda}', VendasShow::class)->name('show');
     Route::get('/{venda}/edit', VendasEdit::class)->name('edit');
 });
